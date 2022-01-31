@@ -35,7 +35,7 @@ class Map:
         with open(self.map_file, "wb") as file:
             file.write(response.content)
 
-    def mach_coor(self, zoom, pos=''):
+    def mach_coor(self, zoom, pos='', mash="map"):
         toponym_to_find = ",".join([self.toponym_longitude, self.toponym_lattitude])
         geocoder_api_server = "http://geocode-maps.yandex.ru/1.x/"
         geocoder_params = {
@@ -58,7 +58,7 @@ class Map:
 
         map_params = {
             "ll": ",".join([self.toponym_longitude, self.toponym_lattitude]),
-            "l": "map",
+            "l": str(mash),
             "z": str(zoom)
         }
         response = requests.get(map_api_server, params=map_params)
@@ -68,9 +68,12 @@ class Map:
         return self.map_file
 
 
+
 zoom = 16
 pos = ''
 pygame.init()
+pygame.font.init()
+mash = "map"
 mp = Map(zoom)
 screen = pygame.display.set_mode((600, 450))
 screen.blit(pygame.image.load(mp.mach_coor(zoom)), (0, 0))
@@ -81,11 +84,19 @@ while running:
         if event.type == pygame.QUIT:
             running = False
             sys.exit()
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            x, y = event.pos
+            if 8 <= x <= 43 and 8 <= y <= 28:
+                mash = "map"
+            elif 8 <= x <= 43 and 55 <= y <= 75:
+                mash = "sat"
+            elif 8 <= x <= 43 and 102 <= y <= 122:
+                mash = "sat,skl"
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_PAGEUP:
                 zoom += 1
-                if zoom >= 21:
-                    zoom = 20
+                if zoom >= 19:
+                    zoom = 19
             elif event.key == pygame.K_PAGEDOWN:
                 zoom -= 1
                 if zoom <= 10:
@@ -98,7 +109,19 @@ while running:
                 pos = 'right'
             elif event.key == pygame.K_LEFT:
                 pos = 'left'
-    screen.blit(pygame.image.load(mp.mach_coor(zoom, pos)), (0, 0))
+    screen.blit(pygame.image.load(mp.mach_coor(zoom, pos, mash=mash)), (0, 0))
+    pygame.draw.rect(screen, 'gray', (8, 8, 50, 20))
+    font_type = pygame.font.Font(None, 17)
+    text = font_type.render('схема', True, (255, 255, 255))
+    screen.blit(text, (10, 11))
+    pygame.draw.rect(screen, 'gray', (8, 55, 50, 20))
+    font_type = pygame.font.Font(None, 17)
+    text = font_type.render('спутник', True, (255, 255, 255))
+    screen.blit(text, (10, 57))
+    pygame.draw.rect(screen, 'gray', (8, 102, 50, 20))
+    font_type = pygame.font.Font(None, 17)
+    text = font_type.render('гибрид', True, (255, 255, 255))
+    screen.blit(text, (10, 105))
     pos = ''
     pygame.display.flip()
 pygame.quit()
