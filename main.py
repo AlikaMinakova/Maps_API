@@ -6,7 +6,7 @@ import pygame
 
 class Map:
     def __init__(self, zoom):
-        toponym_to_find = " ".join(sys.argv[1:])
+        toponym_to_find = "Москва"
         self.adress = toponym_to_find
         geocoder_api_server = "http://geocode-maps.yandex.ru/1.x/"
         geocoder_params = {
@@ -37,8 +37,23 @@ class Map:
             file.write(response.content)
 
     def mach_coor(self, zoom, posi=None, mash="map", place=''):
-        global found, pt
-        if place == '':
+        global found, pt, begin
+        if begin:
+            toponym_to_find = "Москва"
+            geocoder_api_server = "http://geocode-maps.yandex.ru/1.x/"
+            geocoder_params = {
+                "apikey": "40d1649f-0493-4b70-98ba-98533de7710b",
+                "geocode": toponym_to_find,
+                "format": "json"}
+            response = requests.get(geocoder_api_server, params=geocoder_params)
+            if not response:
+                pass
+            json_response = response.json()
+            toponym = json_response["response"]["GeoObjectCollection"][
+                "featureMember"][0]["GeoObject"]
+            toponym_coodrinates = toponym["Point"]["pos"]
+            self.toponym_longitude, self.toponym_lattitude = toponym_coodrinates.split(" ")
+        elif place == '':
             toponym_to_find = ",".join([self.toponym_longitude, self.toponym_lattitude])
             geocoder_api_server = "http://geocode-maps.yandex.ru/1.x/"
             geocoder_params = {
@@ -85,14 +100,15 @@ class Map:
         self.map_file = "map.png"
         with open(self.map_file, "wb") as file:
             file.write(response.content)
+        begin = False
         return self.map_file
 
 
 zoom = 16
 place = ''
 pos = ''
-count = 0
 pt = ''
+begin = False
 found = False
 need_input = False
 pygame.init()
@@ -118,6 +134,10 @@ while running:
                 found = True
             if 8 <= x <= 308 and 405 <= y <= 435:
                 need_input = True
+            if 385 <= x <= 455 and 410 <= y <= 445:
+                pt = ''
+                place = ''
+                begin = True
             if 8 <= x <= 43 and 8 <= y <= 28:
                 mash = "map"
                 color[0], color[1], color[2] = (107, 142, 35), 'gray', 'gray'
@@ -174,7 +194,12 @@ while running:
     font_type = pygame.font.Font(None, 20)
     text = font_type.render(str(place), True, (0, 0, 0))
     screen.blit(text, (15, 409))
+    pygame.draw.rect(screen, "gray", (385, 400, 70, 35))
+    font_type = pygame.font.Font(None, 23)
+    text = font_type.render('сброс', True, (0, 0, 0))
+    screen.blit(text, (395, 410))
     pos = ''
     pygame.display.flip()
 pygame.quit()
 os.remove(mp.mach_coor(zoom))
+
