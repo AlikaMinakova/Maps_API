@@ -37,7 +37,7 @@ class Map:
             file.write(response.content)
 
     def mach_coor(self, zoom, posi=None, mash="map", place=''):
-        global found, pt, begin
+        global found, pt, begin, place2
         if begin:
             toponym_to_find = "Москва"
             geocoder_api_server = "http://geocode-maps.yandex.ru/1.x/"
@@ -77,6 +77,9 @@ class Map:
             toponym = json_response["response"]["GeoObjectCollection"][
                 "featureMember"][0]["GeoObject"]
             toponym_coodrinates = toponym["Point"]["pos"]
+            ad = toponym["metaDataProperty"]["GeocoderMetaData"]["text"].split(',')
+            ad2 = toponym["metaDataProperty"]["GeocoderMetaData"]["Address"]["Components"][2]["name"]
+            place2 = f"{ad[0]}, {ad2}, {', '.join(ad[1:])}"
             self.toponym_longitude, self.toponym_lattitude = toponym_coodrinates.split(" ")
             found = False
             pt = "{0},pm2dgl".format(",".join([self.toponym_longitude, self.toponym_lattitude]))
@@ -106,6 +109,7 @@ class Map:
 
 zoom = 16
 place = ''
+place2 = ''
 pos = ''
 pt = ''
 begin = False
@@ -114,6 +118,8 @@ need_input = False
 pygame.init()
 input_rect = pygame.Rect(8, 400, 300, 35)
 border_rect = pygame.Rect(7, 399, 302, 37)
+input_rect2 = pygame.Rect(65, 6, 500, 25)
+border_rect2 = pygame.Rect(64, 5, 502, 27)
 color = [(107, 142, 35), 'gray', 'gray']
 pygame.font.init()
 mash = "map"
@@ -137,6 +143,7 @@ while running:
             if 385 <= x <= 455 and 410 <= y <= 445:
                 pt = ''
                 place = ''
+                place2 = ''
                 begin = True
             if 8 <= x <= 43 and 8 <= y <= 28:
                 mash = "map"
@@ -198,6 +205,11 @@ while running:
     font_type = pygame.font.Font(None, 23)
     text = font_type.render('сброс', True, (0, 0, 0))
     screen.blit(text, (395, 410))
+    pygame.draw.rect(screen, (128, 128, 0), border_rect2)
+    pygame.draw.rect(screen, (255, 255, 255), input_rect2)
+    font_type = pygame.font.Font(None, 20)
+    text = font_type.render(str(place2), True, (0, 0, 0))
+    screen.blit(text, (72, 13))
     pos = ''
     pygame.display.flip()
 pygame.quit()
